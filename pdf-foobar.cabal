@@ -19,6 +19,7 @@ executable pdf-foobar
   -- other-extensions:    
   build-depends:       aeson
                      , base >=4.9 && <4.10
+                     , containers
                      , ghcjs-base
                      , miso >= 0.7.5
   hs-source-dirs:      src
