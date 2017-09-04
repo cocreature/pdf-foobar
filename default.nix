@@ -4,7 +4,14 @@ let
   ghc = pkgs.haskell.packages.ghc802;
   miso-ghcjs = ghcjs.callPackage ./miso-ghcjs.nix {};
 in
-  {
-    frontend = ghcjs.callPackage ./pdf-foobar-frontend.nix { miso = miso-ghcjs; };
-    backend = ghc.callPackage ./pdf-foobar-backend.nix {};
+  rec {
+    frontend = pkgs.haskell.lib.disableSharedExecutables (ghcjs.callPackage ./pdf-foobar-frontend.nix { miso = miso-ghcjs; });
+    backend = pkgs.haskell.lib.disableSharedExecutables (ghc.callPackage ./pdf-foobar-backend.nix {});
+    docker-image = pkgs.dockerTools.buildImage {
+      name = "cocreature/pdf-foobar";
+      contents = [frontend backend pkgs.mupdf.bin];
+      runAsRoot = ''
+        mkdir -p /tmp
+      '';
+    };
   }
