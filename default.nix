@@ -15,6 +15,9 @@ in
       '';
       config = {
         Cmd = [ "/bin/pdf-foobar-backend" "-d" "/bin/pdf-foobar-frontend.jsexe" ];
+        ExposedPorts = {
+          "3000/tcp" = {};
+        };
       };
     };
   }
