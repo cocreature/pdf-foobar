@@ -13,5 +13,8 @@ in
       runAsRoot = ''
         mkdir -p /tmp
       '';
+      config = {
+        Cmd = [ "/bin/pdf-foobar-backend" "-d" "/bin/pdf-foobar-frontend.jsexe" ];
+      };
     };
   }
