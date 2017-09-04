@@ -151,9 +151,15 @@ viewModel (Model pageInfo) = view
         [ script_ [src_ "https://mozilla.github.io/pdf.js/build/pdf.js"] []
         , nodeHtml "style" [] [text css]
         , h1_ [] ["pdf-foobar"]
-        , div_
-            []
-            [ input_ [id_ "file-input", type_ "file", onChange ReadFile] []
+        , form_
+            [method_ "post", enctype_ "multipart/form-data", action_ "/api"]
+            [ input_
+                [ id_ "file-input"
+                , type_ "file"
+                , name_ "file"
+                , onChange ReadFile
+                ]
+                []
             , span_
                 []
                 [ span_
@@ -164,6 +170,18 @@ viewModel (Model pageInfo) = view
                     []
                     (maybe [] (return . text . ms . show . numPages) pageInfo)
                 ]
+            , br_ [] []
+            , input_
+                [ type_ "hidden"
+                , name_ "pages"
+                , value_
+                    (maybe
+                       ""
+                       (ms . show . IntSet.toAscList . selectedPages)
+                       pageInfo)
+                ]
+                []
+            , button_ [type_ "submit"] ["Generate PDF"]
             ]
         , div_
             [class_ "canvas-container"]
@@ -173,7 +191,9 @@ viewModel (Model pageInfo) = view
                 , height_ (ms $ show canvasHeight)
                 ]
                 []
-            , div_ ([class_ (Miso.String.unwords ("overlay" : selectedClass))]) []
+            , div_
+                ([class_ (Miso.String.unwords ("overlay" : selectedClass))])
+                []
             ]
         ]
       where
