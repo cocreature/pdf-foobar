@@ -36,6 +36,7 @@ executable pdf-foobar-backend
                        , bytestring
                        , containers
                        , http-media
+                       , optparse-applicative
                        , process
                        , servant >= 0.11
                        , servant-server >= 0.11
