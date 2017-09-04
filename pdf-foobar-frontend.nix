@@ -1,5 +1,4 @@
-{ mkDerivation, aeson, base, containers, servant, servant-server
-, stdenv
+{ mkDerivation, aeson, base, containers, ghcjs-base, miso, stdenv
 }:
 mkDerivation {
   pname = "pdf-foobar";
@@ -8,7 +7,7 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    aeson base containers servant servant-server
+    aeson base containers ghcjs-base miso
   ];
   homepage = "https://github.com/cocreature/pdf-foobar";
   license = stdenv.lib.licenses.bsd3;

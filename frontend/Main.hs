@@ -18,6 +18,7 @@ import           JavaScript.Object
 import           JavaScript.Object.Internal
 import           Miso hiding (preventDefault)
 import           Miso.String
+import           Text.Read
 
 data PageInfo = PageInfo
   { currentPage :: !Int
