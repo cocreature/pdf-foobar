@@ -73,7 +73,7 @@ apiHandler :: ExtractPages -> Handler ByteString
 apiHandler ep = liftIO (extractPages ep)
 
 server :: FilePath -> Server API
-server staticPath = apiHandler :<|> serveDirectoryWebApp staticPath
+server staticPath = apiHandler :<|> serveDirectoryFileServer staticPath
 
 app :: FilePath -> Application
 app staticPath = serve (Proxy :: Proxy API) (server staticPath)
