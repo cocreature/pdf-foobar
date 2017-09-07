@@ -6,12 +6,13 @@ let
   mupdf = pkgs.callPackage ./mupdf.nix {};
 in
   rec {
-    frontend = pkgs.haskell.lib.disableSharedExecutables (ghcjs.callPackage ./pdf-foobar-frontend.nix { miso = miso-ghcjs; });
+    frontend = ghcjs.callPackage ./pdf-foobar-frontend.nix { miso = miso-ghcjs; };
     css = ./assets/style.css;
-    backend = pkgs.haskell.lib.disableSharedExecutables (ghc.callPackage ./pdf-foobar-backend.nix {});
+    backend =  pkgs.haskell.lib.justStaticExecutables (ghc.callPackage ./pdf-foobar-backend.nix {});
+    pid1 = pkgs.haskell.lib.justStaticExecutables ghc.pid1;
     docker-image = pkgs.dockerTools.buildImage {
       name = "cocreature/pdf-foobar";
-      contents = [backend mupdf.bin];
+      contents = [pid1 backend mupdf.bin];
       runAsRoot = ''
         mkdir -p /tmp /data
       '';
@@ -21,6 +22,7 @@ in
         cp "${css}" data/style.css;
       '';
       config = {
+        Entrypoint = [ "/bin/pid1" ];
         Cmd = [ "/bin/pdf-foobar-backend" "-d" "/data" ];
         ExposedPorts = {
           "3000/tcp" = {};
