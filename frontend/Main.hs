@@ -48,6 +48,7 @@ data Action
   | SelectPage
   | ReadFile
   | SetPageInfo !PageInfo
+  | Submit
   | NoOp
 
 main :: IO ()
@@ -119,27 +120,49 @@ updateModel docRef Backward m@(Model (Just pageInfo)) =
   in m {pageInfo = Just pageInfo'} <#
      (NoOp <$ renderPage docRef (currentPage pageInfo'))
 updateModel _ SelectPage m = noEff (m {pageInfo = fmap togglePage (pageInfo m)})
+updateModel _ Submit m@(Model Nothing) = noEff m
+updateModel _ Submit m@(Model (Just pageInfo)) =
+  m <# do
+    fileInput <- getElementById "file-input"
+    file <- getFile fileInput
+    let pages = (ms . show . IntSet.toAscList . selectedPages) pageInfo
+    NoOp <$ generatePDF file pages
 updateModel _ NoOp m = noEff m
 
-css :: MisoString
-css = ".overlay {\
-      \  position: absolute;\
-      \  left: 0;\
-      \  top: 0;\
-      \  width: 100%;\
-      \  height: 100%;\
-      \  background-color: #0009;\
-      \  transition: background-color .2s;\
-      \}\
-      \.selected {\
-      \  background-color: #0000;\
-      \}\
-      \.canvas-container {\
-      \  position: relative;\
-      \  width: 800px;\
-      \  height: 600px;\
-      \}\
-      \"
+viewNav :: View Action
+viewNav =
+  div_
+    [class_ "nav-container"]
+    [ nav_
+        []
+        [ label_
+            [class_ "button"]
+            [ input_
+                [ id_ "file-input"
+                , type_ "file"
+                , name_ "file"
+                , onChange ReadFile
+                ]
+                []
+            , "Upload PDF"
+            ]
+        , span_ [class_ "button", onClick Submit] ["Generate PDF"]
+        , span_ [class_ "filler"] []
+        , span_ [class_ "nav-title"] ["pdf-foobar"]
+        ]
+    ]
+
+viewPageInfo :: Maybe PageInfo -> View a
+viewPageInfo pageInfo =
+  div_
+    [class_ "page-info"]
+    (case pageInfo of
+       Nothing -> []
+       Just pageInfo' ->
+         [ (text . ms . show . currentPage) pageInfo'
+         , "/"
+         , (text . ms . show . numPages) pageInfo'
+         ])
 
 -- | View function, with routing
 viewModel :: Model -> View Action
@@ -149,51 +172,23 @@ viewModel (Model pageInfo) = view
       div_
         []
         [ script_ [src_ "https://mozilla.github.io/pdf.js/build/pdf.js"] []
-        , nodeHtml "style" [] [text css]
-        , h1_ [] ["pdf-foobar"]
-        , form_
-            [method_ "post", enctype_ "multipart/form-data", action_ "/api"]
-            [ input_
-                [ id_ "file-input"
-                , type_ "file"
-                , name_ "file"
-                , onChange ReadFile
-                ]
-                []
-            , span_
-                []
-                [ span_
-                    []
-                    (maybe [] (return . text . ms . show . currentPage) pageInfo)
-                , "/"
-                , span_
-                    []
-                    (maybe [] (return . text . ms . show . numPages) pageInfo)
-                ]
-            , br_ [] []
-            , input_
-                [ type_ "hidden"
-                , name_ "pages"
-                , value_
-                    (maybe
-                       ""
-                       (ms . show . IntSet.toAscList . selectedPages)
-                       pageInfo)
-                ]
-                []
-            , button_ [type_ "submit"] ["Generate PDF"]
-            ]
-        , div_
-            [class_ "canvas-container"]
-            [ canvas_
-                [ id_ "pdf-canvas"
-                , width_ (ms $ show canvasWidth)
-                , height_ (ms $ show canvasHeight)
-                ]
-                []
+        , link_ [href_ "/style.css", rel_ "stylesheet"] []
+        , viewNav
+        , main_
+            []
+            [ viewPageInfo pageInfo
             , div_
-                ([class_ (Miso.String.unwords ("overlay" : selectedClass))])
-                []
+                [class_ "canvas-container"]
+                [ canvas_
+                    [ id_ "pdf-canvas"
+                    , width_ (ms $ show canvasWidth)
+                    , height_ (ms $ show canvasHeight)
+                    ]
+                    []
+                , div_
+                    ([class_ (Miso.String.unwords ("overlay" : selectedClass))])
+                    []
+                ]
             ]
         ]
       where
@@ -212,6 +207,26 @@ canvasWidth = 800
 
 canvasHeight :: Int
 canvasHeight = 600
+
+onChange :: action -> Attribute action
+onChange r = on "change" emptyDecoder (const r)
+
+navSub :: Sub Action model
+navSub _ sink = do
+  windowAddEventListener "keydown" =<<
+    (syncCallback1' $ \event -> do
+       Just key <- fromJSVal =<< getProp "key" (Object event)
+       case (key :: JSString) of
+         "ArrowLeft" -> sink Backward >> return jsTrue
+         "ArrowRight" -> sink Forward >> return jsTrue
+         " " -> sink SelectPage >> preventDefault event >> return jsFalse
+         _ -> return jsFalse)
+  windowAddEventListener "keyup" =<<
+    (syncCallback1' $ \event -> do
+       Just key <- fromJSVal =<< getProp "key" (Object event)
+       case (key :: JSString) of
+         " " -> preventDefault event >> return jsFalse
+         _ -> return jsTrue)
 
 foreign import javascript unsafe "$r = new FileReader();"
   newReader :: IO JSVal
@@ -252,26 +267,8 @@ foreign import javascript unsafe "$1.width"
 foreign import javascript unsafe "$1.getContext(\"2d\")"
   get2dContext :: JSVal -> IO JSVal
 
-onChange :: action -> Attribute action
-onChange r = on "change" emptyDecoder (const r)
-
-navSub :: Sub Action model
-navSub _ sink = do
-  windowAddEventListener "keypress" =<<
-    (syncCallback1' $ \event -> do
-       Just key <- fromJSVal =<< getProp "key" (Object event)
-       case (key :: JSString) of
-         "ArrowLeft" -> sink Backward
-         "ArrowRight" -> sink Forward
-         " " -> sink SelectPage
-         _ -> return ()
-       return jsTrue)
-  windowAddEventListener "keyup" =<<
-    (syncCallback1' $ \event -> do
-       Just key <- fromJSVal =<< getProp "key" (Object event)
-       case (key :: JSString) of
-         " " -> preventDefault event >> return jsFalse
-         _ -> return jsTrue)
-
 foreign import javascript unsafe "$1.preventDefault();"
                preventDefault :: JSVal -> IO ()
+
+foreign import javascript unsafe "generatePDF($1, $2);"
+               generatePDF :: JSVal -> JSString -> IO ()
