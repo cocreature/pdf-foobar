@@ -1,7 +1,6 @@
 :root {
-    --main-bg-color: #000912;
-    --light-bg-color: #00213F;
-    --hover-light-bg-color: #19446C;
+    --color-0: #193441;
+    --color-1: #3E606F;
 }
 html {
     font-size: 16px;
@@ -13,7 +12,7 @@ body {
 }
 
 .nav-container {
-    background-color: var(--light-bg-color);
+    background-color: var(--color-0);
     height: 64px;
 }
 nav {
@@ -41,16 +40,29 @@ nav > .button {
     cursor: pointer;
 }
 nav > .button:hover {
-    background-color: var(--hover-light-bg-color);
+    background-color: var(--color-1);
 }
 
 main {
-    width: 50em;
-    margin: auto;
+    width: 60em;
+    margin: 0 auto;
 }
-
-#pdf-form {
-    display: none;
+.no-file {
+    margin: 0 auto;
+    padding-top: 3em;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+}
+.canvas-container {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    margin: 1em auto;
 }
 .overlay {
     position: absolute;
@@ -58,18 +70,17 @@ main {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--main-bg-color);
+    background-color: var(--color-0);
     transition: background-color .2s;
     opacity: 0.7;
 }
 .selected {
     opacity: 0;
 }
-.canvas-container {
-    position: relative;
-    width: 800px;
-    height: 600px;
-}
 .page-info {
     height: 30px;
+    width: 10%;
+    margin: 0 auto;
+    text-align: right;
+    padding-right: 1em;
 }

@@ -4,12 +4,9 @@
 {-# LANGUAGE JavaScriptFFI       #-}
 module Main where
 
-import           Control.Concurrent.MVar
-import           Data.Aeson hiding (Object)
 import           Data.IORef
 import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-import           Data.Maybe
 import           GHCJS.Foreign hiding (Object)
 import           GHCJS.Foreign.Callback
 import           GHCJS.Marshal
@@ -18,7 +15,6 @@ import           JavaScript.Object
 import           JavaScript.Object.Internal
 import           Miso hiding (preventDefault)
 import           Miso.String
-import           Text.Read
 
 data PageInfo = PageInfo
   { currentPage :: !Int
@@ -79,9 +75,9 @@ instance ToJSVal RenderContext where
     return obj'
 
 renderPage :: IORef JSVal -> Int -> IO ()
-renderPage docRef page = do
+renderPage docRef pageNum = do
   doc <- readIORef docRef
-  page <- pdfjsGetPage doc page
+  page <- pdfjsGetPage doc pageNum
   unscaledVp <- pdfjsGetViewport page 1
   height <- viewportHeight unscaledVp
   width <- viewportWidth unscaledVp
@@ -164,6 +160,30 @@ viewPageInfo pageInfo =
          , (text . ms . show . numPages) pageInfo'
          ])
 
+viewOverlay :: Maybe PageInfo -> View a
+viewOverlay Nothing = div_ [class_ "no-file"] ["No file selected"]
+viewOverlay (Just (PageInfo p _ sel)) =
+  div_ [class_ (Miso.String.unwords ("overlay" : selectedClass))] []
+  where
+    selectedClass
+      | p `IntSet.member` sel = ["selected"]
+      | otherwise = []
+
+
+viewCanvas :: Maybe PageInfo -> View a
+viewCanvas pageInfo =
+  div_
+    [class_ "canvas-container"]
+    [ canvas_
+        [ id_ "pdf-canvas"
+        , width_ (ms $ show canvasWidth)
+        , height_ (ms $ show canvasHeight)
+        ]
+        []
+    , viewOverlay pageInfo
+    ]
+
+
 -- | View function, with routing
 viewModel :: Model -> View Action
 viewModel (Model pageInfo) = view
@@ -174,28 +194,8 @@ viewModel (Model pageInfo) = view
         [ script_ [src_ "https://mozilla.github.io/pdf.js/build/pdf.js"] []
         , link_ [href_ "/style.css", rel_ "stylesheet"] []
         , viewNav
-        , main_
-            []
-            [ viewPageInfo pageInfo
-            , div_
-                [class_ "canvas-container"]
-                [ canvas_
-                    [ id_ "pdf-canvas"
-                    , width_ (ms $ show canvasWidth)
-                    , height_ (ms $ show canvasHeight)
-                    ]
-                    []
-                , div_
-                    ([class_ (Miso.String.unwords ("overlay" : selectedClass))])
-                    []
-                ]
-            ]
+        , main_ [] [viewCanvas pageInfo, viewPageInfo pageInfo]
         ]
-      where
-        selectedClass
-          | Just (PageInfo p _ sel) <- pageInfo
-          , p `IntSet.member` sel = ["selected"]
-          | otherwise = []
 
 togglePage :: PageInfo -> PageInfo
 togglePage (PageInfo p t sel)
