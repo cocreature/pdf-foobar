@@ -192,7 +192,7 @@ viewModel (Model pageInfo) = view
       div_
         []
         [ script_ [src_ "https://mozilla.github.io/pdf.js/build/pdf.js"] []
-        , link_ [href_ "/style.css", rel_ "stylesheet"] []
+        , link_ [href_ "/assets/style.css", rel_ "stylesheet"] []
         , viewNav
         , main_ [] [viewCanvas pageInfo, viewPageInfo pageInfo]
         ]
