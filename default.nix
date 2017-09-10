@@ -7,7 +7,7 @@ let
 in
   rec {
     frontend = ghcjs.callPackage ./pdf-foobar-frontend.nix { miso = miso-ghcjs; };
-    css = ./assets/style.css;
+    assets = ./assets;
     backend =  pkgs.haskell.lib.justStaticExecutables (ghc.callPackage ./pdf-foobar-backend.nix {});
     pid1 = pkgs.haskell.lib.justStaticExecutables ghc.pid1;
     docker-image = pkgs.dockerTools.buildImage {
@@ -19,7 +19,7 @@ in
       extraCommands = ''
         echo "foobar";
         cp "${frontend}"/bin/pdf-foobar-frontend.jsexe/* data/;
-        cp "${css}" data/style.css;
+        cp -r "${assets}" data/assets;
       '';
       config = {
         Entrypoint = [ "/bin/pid1" ];
