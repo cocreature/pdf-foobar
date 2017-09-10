@@ -9,7 +9,11 @@ function generatePDF(file, pages) {
     .then(response => response.blob())
     .then(blob => {
       const url = URL.createObjectURL(blob);
-      window.location.href = url;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "document.pdf";
+      document.body.appendChild(link);
+      link.click();
     });
   // TODO handle errors
 }
