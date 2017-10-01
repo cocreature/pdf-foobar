@@ -4,8 +4,8 @@
 }:
 mkDerivation {
   pname = "miso";
-  version = "0.7.5.0";
-  sha256 = "1nfnsmhiqncahasm21y3m5626ra9glq2nvwjv15a5i6h3qw5m328";
+  version = "0.8.0.0";
+  sha256 = "1cc956bb6cee1847c6d5dfbfba021ac32d7dd5cf8e96baa799d081f1466b89fc";
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
