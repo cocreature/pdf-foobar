@@ -214,19 +214,19 @@ onChange r = on "change" emptyDecoder (const r)
 navSub :: Sub Action model
 navSub _ sink = do
   windowAddEventListener "keydown" =<<
-    (syncCallback1' $ \event -> do
+    (asyncCallback1 $ \event -> do
        Just key <- fromJSVal =<< getProp "key" (Object event)
        case (key :: JSString) of
-         "ArrowLeft" -> sink Backward >> return jsTrue
-         "ArrowRight" -> sink Forward >> return jsTrue
-         " " -> sink SelectPage >> preventDefault event >> return jsFalse
-         _ -> return jsFalse)
+         "ArrowLeft" -> sink Backward
+         "ArrowRight" -> sink Forward
+         " " -> sink SelectPage >> preventDefault event
+         _ -> pure ())
   windowAddEventListener "keyup" =<<
-    (syncCallback1' $ \event -> do
+    (asyncCallback1 $ \event -> do
        Just key <- fromJSVal =<< getProp "key" (Object event)
        case (key :: JSString) of
-         " " -> preventDefault event >> return jsFalse
-         _ -> return jsTrue)
+         " " -> preventDefault event
+         _ -> pure ())
 
 foreign import javascript unsafe "$r = new FileReader();"
   newReader :: IO JSVal
@@ -247,7 +247,7 @@ foreign import javascript unsafe "$1.numPages"
   pdfjsNumPages :: JSVal -> IO Int
 
 foreign import javascript unsafe "window.addEventListener($1, $2);"
-  windowAddEventListener :: JSString -> Callback (JSVal -> IO JSVal) -> IO ()
+  windowAddEventListener :: JSString -> Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript interruptible "$1.getPage($2).then($c);"
   pdfjsGetPage :: JSVal -> Int -> IO JSVal
