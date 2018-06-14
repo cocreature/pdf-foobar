@@ -237,7 +237,7 @@ foreign import javascript unsafe "$r = $1.files[0];"
 foreign import javascript interruptible "$1.onload = function(e) { $c(new Uint8Array(e.target.result)); }; $1.readAsArrayBuffer($2);"
   readAsArrayBuffer :: JSVal -> JSVal -> IO JSVal
 
-foreign import javascript interruptible "PDFJS.getDocument($1).then($c);"
+foreign import javascript interruptible "pdfjsLib.getDocument($1).then($c);"
   pdfjsGetDocument :: JSVal -> IO JSVal
 
 foreign import javascript unsafe "$1.numPages"
