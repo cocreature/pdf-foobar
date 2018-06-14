@@ -1,5 +1,5 @@
-{ rev ? "3e3a9e661d7ef83f9dfc26d948a12f8ee1334f6d",
-  outputSha256 ? "07rhxdig4l0xlpwdg4z0vsz4k3gvkd32bzi13mymv4mn9hbqwb4w"
+{ rev ? "f35cc5eb42006429738b2866951c06d632301605",
+  outputSha256 ? "1k1lnlip5rl705dycsbqnz4sdnh61xdsj2c62sby0pzhjppn4sjs"
 }:
 let
   nixpkgs = builtins.fetchTarball {
@@ -13,22 +13,10 @@ let
       rev = "d6fd3fa96cf5adca9052460328be888c64df52d8";
       sha256 = "0v4p41i45mnhpfrqw3n0394w0g9pglylxy66vbaqyfx6vvmbwzs4";
   };
-  ghcjs = pkgs.haskell.packages.ghcjs84.extend (self: super: {
-    doctest = null;
-    ghcjs-base = pkgs.haskell.lib.dontCheck (super.callCabal2nix "ghcjs-base" (pkgs.fetchFromGitHub {
-      owner = "ghcjs";
-      repo = "ghcjs-base";
-      rev = "4560541fbab5b77ee34d0348ec04bb1dda8e5db3";
-      sha256 = "0n7m46f32iass89ww4f2c126k4yqhfp95km7c9l6klsh93lp1i8p";
-    }) {});
-    http-media = pkgs.haskell.lib.dontCheck super.http-media;
-    http-types = pkgs.haskell.lib.dontCheck super.http-types;
+  ghcjs = pkgs.haskell.packages.ghcjs80.extend (self: super: {
+    servant = super.callHackage "servant" "0.12.1" {};
+    http-types = super.callHackage "http-types" "0.11" {};
     miso = super.callCabal2nix "miso" miso-src {};
-    scientific = pkgs.haskell.lib.dontCheck super.scientific;
-    servant = pkgs.haskell.lib.dontCheck super.servant;
-    stm = super.callHackage "stm" "2.4.5.0" {};
-    syb = pkgs.haskell.lib.dontCheck super.syb;
-    tasty-quickcheck = pkgs.haskell.lib.dontCheck super.tasty-quickcheck;
   });
   ghc = pkgs.haskell.packages.ghc843.extend (self: super: {
     miso = super.callCabal2nix "miso" miso-src {};
