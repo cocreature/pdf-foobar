@@ -42,9 +42,9 @@ data ExtractPages = ExtractPages
   , expgsPages :: [Word]
   }
 
-instance FromMultipart ExtractPages where
+instance FromMultipart Tmp ExtractPages where
   fromMultipart multipartData =
-    ExtractPages <$> fmap fdFilePath (lookupFile "file" multipartData) <*>
+    ExtractPages <$> fmap fdPayload (lookupFile "file" multipartData) <*>
     (readMaybe =<< (fmap Text.unpack (lookupInput "pages" multipartData)))
 
 data PDF
@@ -56,7 +56,7 @@ instance MimeRender PDF ByteString where
   mimeRender _ bs = ByteString.fromStrict bs
 
 type API
-   = "api" :> MultipartForm ExtractPages :> Post '[ PDF] ByteString :<|> Raw
+   = "api" :> MultipartForm Tmp ExtractPages :> Post '[ PDF] ByteString :<|> Raw
 
 extractPages :: ExtractPages -> IO ByteString
 extractPages (ExtractPages filePath pages) = do

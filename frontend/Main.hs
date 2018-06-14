@@ -55,6 +55,7 @@ main = do
     { model = Model Nothing
     , initialAction = NoOp
     , update = updateModel docRef
+    , mountPoint = Nothing
     , ..
     }
   where
@@ -137,9 +138,8 @@ viewNav =
                 [ id_ "file-input"
                 , type_ "file"
                 , name_ "file"
-                , onChange ReadFile
+                , onChange (\_ -> ReadFile)
                 ]
-                []
             , "Upload PDF"
             ]
         , span_ [class_ "button", onClick Submit] ["Generate PDF"]
@@ -192,7 +192,7 @@ viewModel (Model pageInfo) = view
       div_
         []
         [ script_ [src_ "https://mozilla.github.io/pdf.js/build/pdf.js"] []
-        , link_ [href_ "/assets/style.css", rel_ "stylesheet"] []
+        , link_ [href_ "/assets/style.css", rel_ "stylesheet"]
         , viewNav
         , main_ [] [viewCanvas pageInfo, viewPageInfo pageInfo]
         ]
@@ -208,11 +208,8 @@ canvasWidth = 800
 canvasHeight :: Int
 canvasHeight = 600
 
-onChange :: action -> Attribute action
-onChange r = on "change" emptyDecoder (const r)
-
-navSub :: Sub Action model
-navSub _ sink = do
+navSub :: Sub Action
+navSub sink = do
   windowAddEventListener "keydown" =<<
     (asyncCallback1 $ \event -> do
        Just key <- fromJSVal =<< getProp "key" (Object event)
@@ -245,9 +242,6 @@ foreign import javascript interruptible "PDFJS.getDocument($1).then($c);"
 
 foreign import javascript unsafe "$1.numPages"
   pdfjsNumPages :: JSVal -> IO Int
-
-foreign import javascript unsafe "window.addEventListener($1, $2);"
-  windowAddEventListener :: JSString -> Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript interruptible "$1.getPage($2).then($c);"
   pdfjsGetPage :: JSVal -> Int -> IO JSVal

@@ -19,7 +19,7 @@ executable pdf-foobar-frontend
     buildable: False
   else
     build-depends:       aeson
-                       , base >=4.9 && <4.10
+                       , base >=4.8 && <4.12
                        , containers
                        , ghcjs-base
                        , miso >= 0.7.5
@@ -34,7 +34,7 @@ executable pdf-foobar-backend
     buildable: False
   else
     build-depends:       aeson
-                       , base >=4.9 && <4.10
+                       , base >=4.9 && <4.12
                        , bytestring
                        , containers
                        , http-media
@@ -42,7 +42,7 @@ executable pdf-foobar-backend
                        , process
                        , servant >= 0.11
                        , servant-server >= 0.11
-                       , servant-multipart >= 0.10 && < 0.11
+                       , servant-multipart >= 0.10 && < 0.12
                        , temporary
                        , text
                        , warp >= 3.2
